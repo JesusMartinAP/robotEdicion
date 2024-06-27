@@ -1,4 +1,5 @@
 import os
+import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from tqdm import tqdm
@@ -6,19 +7,23 @@ import win32com.client
 from datetime import datetime
 import subprocess
 
+# Detectar la ruta donde está el ejecutable o el script
+application_path = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):
+    application_path = sys._MEIPASS
+
 # Lista global para almacenar las carpetas seleccionadas
 selected_folders = []
 
 # Ruta del archivo de plantilla
 template_path = ""
 
-# Función para añadir carpeta a la lista
-def add_folder():
-    folder_path = folder_entry.get()
-    if os.path.isdir(folder_path) and folder_path not in selected_folders:
+# Función para seleccionar carpetas
+def select_folders():
+    folder_path = filedialog.askdirectory()
+    if folder_path:
         selected_folders.append(folder_path)
         folder_list.insert(tk.END, folder_path)
-        folder_entry.delete(0, tk.END)
 
 # Función para eliminar la carpeta seleccionada de la lista
 def remove_selected_folder():
@@ -121,7 +126,12 @@ def rename_file(original_name, folder_name, output_format):
 
 # Función para procesar imágenes
 def process_images(input_folder, root_output_folder):
-    photoshop = win32com.client.Dispatch("Photoshop.Application")
+    try:
+        photoshop = win32com.client.Dispatch("Photoshop.Application")
+    except Exception as e:
+        print(f"No se pudo iniciar Photoshop: {e}")
+        messagebox.showerror("Error", f"No se pudo iniciar Photoshop: {e}")
+        return
 
     # Crear carpeta de salida con el mismo nombre que la carpeta de entrada dentro de "Robot Edición"
     output_folder_name = os.path.basename(input_folder)
@@ -158,23 +168,20 @@ format_var = tk.StringVar(value="jpg")
 frame = tk.Frame(root, padx=10, pady=10)
 frame.pack(padx=10, pady=10)
 
-label = tk.Label(frame, text="Ingrese la ruta de las carpetas con las imágenes y presione 'Agregar carpeta':")
+label = tk.Label(frame, text="Ingrese la ruta de las carpetas con las imágenes y presione 'Seleccionar carpeta':")
 label.grid(row=0, column=0, padx=5, pady=5)
 
-folder_entry = tk.Entry(frame, width=50)
-folder_entry.grid(row=1, column=0, padx=5, pady=5)
-
-add_button = tk.Button(frame, text="Agregar carpeta", command=add_folder)
-add_button.grid(row=1, column=1, padx=5, pady=5)
-
 folder_list = tk.Listbox(frame, width=50, height=10)
-folder_list.grid(row=2, column=0, padx=5, pady=5, columnspan=2)
+folder_list.grid(row=1, column=0, padx=5, pady=5, columnspan=2)
 
 remove_button = tk.Button(frame, text="Eliminar carpeta seleccionada", command=remove_selected_folder)
-remove_button.grid(row=3, column=1, padx=5, pady=5)
+remove_button.grid(row=2, column=1, padx=5, pady=5)
 
-select_template_button = tk.Button(frame, text="Seleccionar plantilla y procesar", command=select_template)
-select_template_button.grid(row=4, column=0, columnspan=2, pady=10)
+select_folders_button = tk.Button(frame, text="Seleccionar carpeta", command=select_folders)
+select_folders_button.grid(row=3, column=0, columnspan=2, pady=5)
+
+process_button = tk.Button(frame, text="Seleccionar plantilla y procesar carpetas", command=select_template)
+process_button.grid(row=4, column=0, columnspan=2, pady=10)
 
 label_format = tk.Label(frame, text="Seleccione el formato de salida:")
 label_format.grid(row=5, column=0, padx=5, pady=5)
