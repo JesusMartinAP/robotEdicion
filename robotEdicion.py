@@ -2,7 +2,7 @@ import os
 import sys
 import tkinter as tk # pip install tk
 from tkinter import filedialog, messagebox, ttk
-from tkinterdnd2 import TkinterDnD, DND_FILES
+from tkinterdnd2 import TkinterDnD, DND_FILES # pip install tkinterdnd2
 from tqdm import tqdm
 import win32com.client # pip install pywin32
 from datetime import datetime
@@ -33,20 +33,21 @@ def remove_selected_folder():
         selected_folders.pop(selected_index[0])
         folder_list.delete(selected_index)
 
-# Función para seleccionar la carpeta y el archivo de plantilla
-def select_folder():
-    global template_path
+# Función para seleccionar carpetas
+def select_folders():
     folder_path = filedialog.askdirectory()
     if folder_path:
         selected_folders.append(folder_path)
         folder_list.insert(tk.END, folder_path)
 
-        # Seleccionar archivo de plantilla
-        template_path = filedialog.askopenfilename(filetypes=[("PSD files", "*.psd")])
-        if template_path:
-            process_all_folders()
-        else:
-            messagebox.showerror("Error", "No se seleccionó el archivo de plantilla")
+# Función para seleccionar el archivo de plantilla
+def select_template():
+    global template_path
+    template_path = filedialog.askopenfilename(filetypes=[("PSD files", "*.psd")])
+    if template_path:
+        process_all_folders()
+    else:
+        messagebox.showerror("Error", "No se seleccionó el archivo de plantilla")
 
 # Función para procesar todas las carpetas seleccionadas
 def process_all_folders():
@@ -179,13 +180,19 @@ folder_list.grid(row=1, column=0, padx=5, pady=5, columnspan=2)
 remove_button = tk.Button(frame, text="Eliminar carpeta seleccionada", command=remove_selected_folder)
 remove_button.grid(row=2, column=1, padx=5, pady=5)
 
-process_button = tk.Button(frame, text="Procesar carpetas", command=select_folder)
-process_button.grid(row=3, column=0, columnspan=2, pady=10)
+select_folders_button = tk.Button(frame, text="Seleccionar carpeta", command=select_folders)
+select_folders_button.grid(row=3, column=0, columnspan=2, pady=5)
+
+process_button = tk.Button(frame, text="Seleccionar plantilla y procesar carpetas", command=select_template)
+process_button.grid(row=4, column=0, columnspan=2, pady=10)
 
 label_format = tk.Label(frame, text="Seleccione el formato de salida:")
-label_format.grid(row=4, column=0, padx=5, pady=5)
+label_format.grid(row=5, column=0, padx=5, pady=5)
 
 format_combobox = ttk.Combobox(frame, textvariable=format_var, values=["jpg", "jpeg", "png", "psd"], state="readonly")
-format_combobox.grid(row=4, column=1, padx=5, pady=5)
+format_combobox.grid(row=5, column=1, padx=5, pady=5)
+
+root.drop_target_register(DND_FILES)
+root.dnd_bind('<<Drop>>', drop)
 
 root.mainloop()
