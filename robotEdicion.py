@@ -1,11 +1,11 @@
-import os
-import sys
+import os # pip install os-win
+import sys # pip install sys
 import tkinter as tk # pip install tk
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox, ttk # pip install tkinter
 from tkinterdnd2 import TkinterDnD, DND_FILES # pip install tkinterdnd2
-from tqdm import tqdm
+from tqdm import tqdm # pip install tqdm
 import win32com.client # pip install pywin32
-from datetime import datetime
+from datetime import datetime # pip install datetime
 
 # Detectar la ruta donde está el ejecutable o el script
 application_path = os.path.dirname(os.path.abspath(__file__))
