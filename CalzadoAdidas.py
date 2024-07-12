@@ -8,6 +8,7 @@ from tqdm import tqdm
 import win32com.client
 from datetime import datetime
 import cv2  # OpenCV
+import numpy as np  # Necesario para manipular imágenes
 
 application_path = os.path.dirname(os.path.abspath(__file__))
 if getattr(sys, 'frozen', False):
@@ -66,7 +67,6 @@ def process_image_with_template(image_path, output_folder, photoshop, output_for
 
         time.sleep(1)
         doc = photoshop.Open(template_path)
-        inserted_layer = doc.ArtLayers.Add()
         placed_doc = photoshop.Open(image_path)
         placed_doc.Selection.SelectAll()
         placed_doc.Selection.Copy()
@@ -75,7 +75,17 @@ def process_image_with_template(image_path, output_folder, photoshop, output_for
 
         inserted_layer = doc.ActiveLayer
         inserted_layer.Resize(100, 100)
-        
+
+        # Centrar la imagen con un margen de 240 píxeles
+        doc.ArtLayers.Add()
+        doc.ActiveLayer = inserted_layer
+        layer_bounds = inserted_layer.Bounds
+        layer_width = layer_bounds[2] - layer_bounds[0]
+        layer_height = layer_bounds[3] - layer_bounds[1]
+        doc_width = doc.Width
+        doc_height = doc.Height
+        inserted_layer.Translate((doc_width - layer_width) / 2 - layer_bounds[0], 240 - layer_bounds[1])
+
         if text_content and text_layer_name:
             try:
                 text_layer = doc.ArtLayers[text_layer_name]
@@ -107,15 +117,18 @@ def process_image_with_template(image_path, output_folder, photoshop, output_for
 
 def process_image_10_with_opencv(image_path):
     try:
-        img = cv2.imread(image_path)
+        img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+        if img is None:
+            raise Exception("La imagen no se pudo cargar")
+
         height, width = img.shape[:2]
         half_height = height // 2
 
-        # Recortar la mitad superior
+        # Recortar la mitad superior de la imagen
         img_cropped = img[:half_height, :]
 
-        # Guardar la imagen recortada
-        cropped_image_path = image_path.replace(".jpg", "_cropped.jpg")
+        # Guardar la imagen recortada como PNG, manteniendo la transparencia si existe
+        cropped_image_path = image_path.replace(".jpg", "_cropped.png").replace(".jpeg", "_cropped.png").replace(".bmp", "_cropped.png")
         cv2.imwrite(cropped_image_path, img_cropped)
         return cropped_image_path
 
